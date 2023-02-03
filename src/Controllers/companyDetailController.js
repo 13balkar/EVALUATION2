@@ -17,7 +17,8 @@ const saveDetail = async (req, res) => {
 
 const getBySector = async (req, res) => {
   try {
-    const companyDetails = await companyDetailManagaer.getBySector(req.urlParams.get('product'));
+
+    const companyDetails = await companyDetailManagaer.getBySector(req.query.sector);
     res.status(200).json(companyDetails);
   } catch (err) {
     if (err instanceof HttpErrors) {
