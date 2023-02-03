@@ -1,4 +1,5 @@
-const { companies } = require('../../database/models');
+const { company } = require('../../database/models');
+const HttpErrors = require('../../Errors/httpErrors');
 const makeJson = (data) => {
   data = data.split('\r');
   data = data[0].split('\n');
@@ -21,7 +22,7 @@ const fetchDetails = async (urlLink) => {
 };
 
 
-const getDetailBySector = async (companySector, companyId) => {
+const getDetailBySector = async (companySector) => {
   const url = 'http://54.167.46.10/sector?name=' + companySector;
   const data = await fetch(url)
     .then(response => response.text())
@@ -63,14 +64,16 @@ const calculateScore = (companyId, detailBySector) => {
   });
   return score;
 };
+const allCompanyDetails = [];
 const getCompanyDetails = async (companyDetailsInJson) => {
-  const allCompanyDetails = [];
+
   for (let iterator = 0; iterator < companyDetailsInJson.length; iterator++) {
     let IdData = await getDetailById(companyDetailsInJson[iterator].companyId);
     IdData = JSON.parse(IdData);
     const sectorData = await getDetailBySector(companyDetailsInJson[iterator].sector, companyDetailsInJson[iterator].companyId);
     const score = calculateScore(companyDetailsInJson[iterator].companyId, JSON.parse(sectorData));
     const detailRequired = { companyName: IdData['name'], companyId: companyDetailsInJson[iterator].companyId, ceoName: IdData['ceo'], companyScore: score, sector: companyDetailsInJson[iterator].sector };
+    // const entry = await company.create(detailRequired);
     allCompanyDetails.push(detailRequired);
   }
 
@@ -82,4 +85,13 @@ const saveDetail = async (urlLink) => {
   const detailsCompanyWise = await getCompanyDetails(companyDetailsInJson);
   return detailsCompanyWise;
 };
-module.exports = { saveDetail };
+const getBySector = (sector) => {
+  const output = [];
+  allCompanyDetails.forEach(entity => {
+    if (entity.sector === sector) {
+      output.push(entity);
+    }
+  });
+  return output;
+};
+module.exports = { saveDetail, getBySector };
